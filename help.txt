@@ -1,0 +1,11 @@
+
+train: train [set] [iets om cases te specifyen]
+selection: selection empty
+
+viewCase: viewCase [set] [caseNumber]
+
+generate: generate [puzzle] [set/case/setup] [timeout per case in seconds] [maxDepth] [ignore preAUF] [ignore postAUF] [sortAlgorithm] [destination file]
+    [number of threads??]
+
+generate 2x2RUF eg1 10s 99 true true defaultOptimizer algs.txt
+
