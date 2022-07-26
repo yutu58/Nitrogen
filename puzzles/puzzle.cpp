@@ -168,7 +168,6 @@ struct Puzzle {
                     std::string soFar = soFar2 + " " + key;
                     soFar = trim(soFar);
 
-                    //Add soFar to hashmap
                     int hash = hashPosition();
 
                     if (fromSolvedTable.count(hash) == 0) {
@@ -176,7 +175,7 @@ struct Puzzle {
                         vec.push_back(inverseAlg(soFar));
                         fromSolvedTable.insert({hash, vec});
                     } else {
-                        auto vec = fromSolvedTable.find(hash)->second;
+                        auto& vec = fromSolvedTable.find(hash)->second;
                         vec.push_back(inverseAlg(soFar));
                     }
 
