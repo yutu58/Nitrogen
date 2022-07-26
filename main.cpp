@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
-#include "commands/commands.h"
+#include "puzzles/puzzle.cpp"
+#include "puzzles/solve.cpp"
 
 using namespace std;
 
@@ -23,35 +24,45 @@ command_code hashCommand (std::string const& inString) {
 }
 
 int main() {
-    bool running = true;
+    Puzzle p = newPuzzle("defFilePath/2x2RUF.depth", 5);
 
-    while (running) {
-        string fullCommand;
-        std::cin >> fullCommand;
+    vector<string> solutions = solveToVec(p, "R U R' U R U2 R'", 7);
 
-        string command = fullCommand.substr(0, fullCommand.find(' '));
-        switch (hashCommand(command)) {
-            case eQuit:
-                running = false;
-                break;
-            case eHelp:
-                help(command);
-                break;
-            case eGenerate:
-                generate(command);
-                break;
-            case eTrain:
-                train(command);
-                break;
-            case eViewCase:
-                viewCase(command);
-                break;
-            case eUnknown:
-                std::cout << "Unknown command: " << command << std::endl;
-                break;
-            default:
-                std::cout << "Unknown command: " << command << std::endl;
-        }
+    for (const string& s : solutions) {
+        std::cout << s << std::endl;
     }
-    return 0;
+
+    return 1;
+
+//    bool running = true;
+//
+//    while (running) {
+//        string fullCommand;
+//        std::cin >> fullCommand;
+//
+//        string command = fullCommand.substr(0, fullCommand.find(' '));
+//        switch (hashCommand(command)) {
+//            case eQuit:
+//                running = false;
+//                break;
+//            case eHelp:
+//                help(command);
+//                break;
+//            case eGenerate:
+//                generate(command);
+//                break;
+//            case eTrain:
+//                train(command);
+//                break;
+//            case eViewCase:
+//                viewCase(command);
+//                break;
+//            case eUnknown:
+//                std::cout << "Unknown command: " << command << std::endl;
+//                break;
+//            default:
+//                std::cout << "Unknown command: " << command << std::endl;
+//        }
+//    }
+//    return 0;
 }
