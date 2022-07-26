@@ -24,9 +24,7 @@ command_code hashCommand (std::string const& inString) {
 }
 
 int main() {
-    string path = "DefFile/Path";
-    Puzzle p = newPuzzle(path + "2x2RUF.def");
-    p.del();
+    Puzzle p = newPuzzle("DefFilePath/2x2RUF.def", 6);
 
     return 1;
 
