@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
-#include "commands/commands.h"
 #include "puzzles/puzzle.cpp"
+#include "puzzles/solve.cpp"
 
 using namespace std;
 
@@ -24,7 +24,13 @@ command_code hashCommand (std::string const& inString) {
 }
 
 int main() {
-    Puzzle p = newPuzzle("DefFilePath/2x2RUF.def", 6);
+    Puzzle p = newPuzzle("defFilePath/2x2RUF.depth", 5);
+
+    vector<string> solutions = solveToVec(p, "R U R' U R U2 R'", 7);
+
+    for (const string& s : solutions) {
+        std::cout << s << std::endl;
+    }
 
     return 1;
 

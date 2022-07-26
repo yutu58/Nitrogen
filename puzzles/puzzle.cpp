@@ -8,19 +8,21 @@
 #include <unordered_map>
 #include <fstream>
 #include <utility>
-#include "../util/util.cpp"
+#include <vector>
+#include "../util/util.h"
 
 
 
 struct Puzzle {
     int size;
+    int preSearchDepth;
 
     std::string name;
 
     std::map<std::string, std::tuple<int, int>> piecesMap;
     std::map<std::string, int> piecesIndexMap;
 
-    std::unordered_map<int, vector<string>> fromSolvedTable;
+    std::unordered_map<long, std::vector<std::string>> fromSolvedTable;
 
     std::map<int, int> orientationMap;
     std::map<std::string, std::string> moveInverseMap;
@@ -31,12 +33,19 @@ struct Puzzle {
 
     int* currentPos;
 
-    int hashPosition(const int* pos) const {
+    //TODO: fix this to some better encoder type so it works 100%
+    [[nodiscard]] long hashPosition() const {
         int total = 0;
         for (int i = 0; i < size; i++) {
-            total = total * size + pos[i];
+            total = total * size + currentPos[i];
         }
         return total;
+    }
+
+    void applyMoves(const std::string& moves) {
+        for (const std::string& s : strSplit(moves, " ")) {
+            applyMove(s);
+        }
     }
 
     void applyMove(const std::string& move) {
@@ -63,7 +72,7 @@ struct Puzzle {
         }
     }
 
-    bool isSolved() const {
+    [[nodiscard]] bool isSolved() const {
         bool solved = true;
         for (int i = 0; i < size; i++) {
             solved = solved && currentPos[i] == solvedState[i];
@@ -93,7 +102,8 @@ struct Puzzle {
                 }
             }
 
-            Puzzle p = Puzzle(size, name, piecesMap, piecesIndexMap, moveMap, indexedSolvedState, false);
+            //Create a "mock" puzzle with similar properties to check
+            Puzzle p = Puzzle(size, preSearchDepth, name, piecesMap, piecesIndexMap, moveMap, indexedSolvedState, false);
             p.applyMove(key);
             moveInverseMap.insert({key, key+"'"});
 
@@ -135,12 +145,12 @@ struct Puzzle {
 
     //Note: this method only works for a single move
     //Use inverseAlg for inversion of an alg
-    string inverseMove(const std::string& move) {
+    std::string inverseMove(const std::string& move) {
         return moveInverseMap.find(move)->second;
     }
 
-    string inverseAlg(const std::string& alg) {
-        vector<string> all = strSplit(alg, " ");
+    std::string inverseAlg(const std::string& alg) {
+        std::vector<std::string> all = strSplit(alg, " ");
         std::reverse(all.begin(), all.end());
         std::string res = "";
 
@@ -150,23 +160,24 @@ struct Puzzle {
         return trim(res);
     }
 
-    void calcFromSolved(std::string soFar, const std::string& lastMove, int maxDepth) {
+    void calcFromSolved(std::string soFar2, const std::string& lastMove, int maxDepth) {
         if (maxDepth != 0) {
             for (auto const&[key, value] : moveMap) {
                 if (!canCancel(key, lastMove)) {
                     applyMove(key);
-                    soFar += " " + key;
+                    std::string soFar = soFar2 + " " + key;
+                    soFar = trim(soFar);
 
                     //Add soFar to hashmap
-                    int hash = hashPosition(currentPos);
+                    int hash = hashPosition();
 
                     if (fromSolvedTable.count(hash) == 0) {
-                        vector<std::string> vec;
-                        vec.push_back(soFar);
+                        std::vector<std::string> vec;
+                        vec.push_back(inverseAlg(soFar));
                         fromSolvedTable.insert({hash, vec});
                     } else {
                         auto vec = fromSolvedTable.find(hash)->second;
-                        vec.push_back(soFar);
+                        vec.push_back(inverseAlg(soFar));
                     }
 
                     calcFromSolved(soFar, key, maxDepth - 1);
@@ -179,9 +190,9 @@ struct Puzzle {
         }
     }
 
-    Puzzle(int size, string name, const map<std::string, std::tuple<int, int>> &piecesMap,
-           const map<std::string, int> &piecesIndexMap, const map<std::string, int *> &moveMap, int *solvedState, bool generatePowers)
-            : size(size), name(std::move(name)), piecesMap(piecesMap), piecesIndexMap(piecesIndexMap), moveMap(moveMap),
+    Puzzle(int size, int preSearchDepth, std::string name, const std::map<std::string, std::tuple<int, int>> &piecesMap,
+           const std::map<std::string, int> &piecesIndexMap, const std::map<std::string, int *> &moveMap, int *solvedState, bool generatePowers)
+            : size(size), preSearchDepth(preSearchDepth), name(std::move(name)), piecesMap(piecesMap), piecesIndexMap(piecesIndexMap), moveMap(moveMap),
               solvedState(solvedState) {
         currentPos = (int*)malloc(size * sizeof(int));
         memcpy(currentPos, solvedState, size * sizeof(int));
@@ -279,13 +290,13 @@ Puzzle newPuzzle(const std::string& def, int preSearchDepth) {
                 int index = piecesIndexMap.find(pieces)->second;
                 int expectedNumbers = std::get<1>(amounts) > 1 ? std::get<0>(amounts) * 2 : std::get<0>(amounts);
 
-                vector<int> posVec;
+                std::vector<int> posVec;
 
                 //TODO Fix missing orientations here (in some way)
                 while (posVec.size() < expectedNumbers) {
                     std::string positions;
                     std::getline(defFile, positions);
-                    for (const string &v : strSplit(positions, " ")) {
+                    for (const std::string &v : strSplit(positions, " ")) {
                         posVec.push_back(stoi(v));
                     }
                 }
@@ -324,7 +335,7 @@ Puzzle newPuzzle(const std::string& def, int preSearchDepth) {
                 int index = piecesIndexMap.find(pieces)->second;
                 int expectedNumbers = std::get<1>(amounts) > 1 ? std::get<0>(amounts) * 2 : std::get<0>(amounts);
 
-                vector<int> posVec;
+                std::vector<int> posVec;
 
                 int offset = 0;
 
@@ -332,7 +343,7 @@ Puzzle newPuzzle(const std::string& def, int preSearchDepth) {
                 while (posVec.size() < expectedNumbers) {
                     std::string positions;
                     std::getline(defFile, positions);
-                    for (const string &v : strSplit(positions, " ")) {
+                    for (const std::string &v : strSplit(positions, " ")) {
                         if (offset >= std::get<0>(amounts)) {
                             posVec.push_back(stoi(v));
                         } else {
@@ -367,7 +378,7 @@ Puzzle newPuzzle(const std::string& def, int preSearchDepth) {
     }
     defFile.close();
 
-    Puzzle z = Puzzle(total, puzzleName, piecesMap, piecesIndexMap, moveMap, solvedState, true);
+    Puzzle z = Puzzle(total, preSearchDepth, puzzleName, piecesMap, piecesIndexMap, moveMap, solvedState, true);
     z.calcFromSolved("", "", preSearchDepth);
     return z;
 }
