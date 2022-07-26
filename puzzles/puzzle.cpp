@@ -59,10 +59,52 @@ typedef struct Puzzle {
     }
 
     void generateMovePowers() {
+        std::map<std::string, int*> extraMoveMap;
 
         //Check how many times a move can be done to return back to solved
+        for (auto const& [key, val] : moveMap) {
+            this->resetToSolved();
+            this->applyMove(key);
+            int amount = 1;
 
-        //Calculate powers based on that
+            while (!this->isSolved()) {
+                this->applyMove(key);
+                amount++;
+            }
+            int* indexedSolvedState = new int[size];
+            for (int i=0; i < size; i++) {
+                if (orientationMap.count(i)) {
+                    indexedSolvedState[i] = 0;
+                } else {
+                    indexedSolvedState[i] = i+1;
+                }
+            }
+
+            Puzzle p = Puzzle(size, name, piecesMap, piecesIndexMap, moveMap, indexedSolvedState, false);
+            p.applyMove(key);
+
+
+            for (int i = 2; i < amount; i++) {
+                p.applyMove(key);
+
+                int* moveArray = new int[size];
+                memcpy(moveArray, p.currentPos, size * sizeof(int));
+
+                if (i <= amount / 2) {
+                    extraMoveMap.insert({key + std::to_string(i), moveArray});
+                } else {
+                    int n = amount - i;
+                    if (n > 1) {
+                        extraMoveMap.insert({key + std::to_string(i) + "'", moveArray});
+                    } else {
+                        extraMoveMap.insert({key + "'", moveArray});
+                    }
+                }
+            }
+            p.del();
+        }
+
+        moveMap.insert(extraMoveMap.begin(), extraMoveMap.end());
     }
 
     void resetToSolved() {
@@ -72,7 +114,7 @@ typedef struct Puzzle {
     }
 
     Puzzle(int size, string name, const map<std::string, std::tuple<int, int>> &piecesMap,
-           const map<std::string, int> &piecesIndexMap, const map<std::string, int *> &moveMap, int *solvedState)
+           const map<std::string, int> &piecesIndexMap, const map<std::string, int *> &moveMap, int *solvedState, bool generatePowers)
             : size(size), name(std::move(name)), piecesMap(piecesMap), piecesIndexMap(piecesIndexMap), moveMap(moveMap),
               solvedState(solvedState) {
         currentPos = (int*)malloc(size * sizeof(int));
@@ -87,6 +129,10 @@ typedef struct Puzzle {
                     orientationMap.insert({i, nOrientations});
                 }
             }
+        }
+
+        if (generatePowers) {
+            this->generateMovePowers();
         }
     }
 
@@ -104,7 +150,6 @@ Puzzle newPuzzle(const std::string& def) {
 
     std::map<std::string, std::tuple<int, int>> piecesMap;
     std::map<std::string, int> piecesIndexMap;
-    std::map<int, int> orientationMap;
 
     std::map<std::string, int*> moveMap;
 
@@ -243,5 +288,5 @@ Puzzle newPuzzle(const std::string& def) {
         }
     }
     defFile.close();
-    return Puzzle(total, puzzleName, piecesMap, piecesIndexMap, moveMap, solvedState);
+    return Puzzle(total, puzzleName, piecesMap, piecesIndexMap, moveMap, solvedState, true);
 }
