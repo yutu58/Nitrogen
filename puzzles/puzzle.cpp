@@ -5,12 +5,14 @@
 #include <tuple>
 #include <string>
 #include <map>
+#include <unordered_map>
 #include <fstream>
 #include <utility>
-#include <unordered_set>
 #include "../util/util.cpp"
 
-typedef struct Puzzle {
+
+
+struct Puzzle {
     int size;
 
     std::string name;
@@ -18,13 +20,24 @@ typedef struct Puzzle {
     std::map<std::string, std::tuple<int, int>> piecesMap;
     std::map<std::string, int> piecesIndexMap;
 
+    std::unordered_map<int, vector<string>> fromSolvedTable;
+
     std::map<int, int> orientationMap;
+    std::map<std::string, std::string> moveInverseMap;
 
     std::map<std::string, int*> moveMap;
 
     int* solvedState;
 
     int* currentPos;
+
+    int hashPosition(const int* pos) const {
+        int total = 0;
+        for (int i = 0; i < size; i++) {
+            total = total * size + pos[i];
+        }
+        return total;
+    }
 
     void applyMove(const std::string& move) {
         int* moveArr = moveMap.find(move)->second;
@@ -82,6 +95,7 @@ typedef struct Puzzle {
 
             Puzzle p = Puzzle(size, name, piecesMap, piecesIndexMap, moveMap, indexedSolvedState, false);
             p.applyMove(key);
+            moveInverseMap.insert({key, key+"'"});
 
 
             for (int i = 2; i < amount; i++) {
@@ -90,20 +104,25 @@ typedef struct Puzzle {
                 int* moveArray = new int[size];
                 memcpy(moveArray, p.currentPos, size * sizeof(int));
 
-                if (i <= amount / 2) {
+                if (i < amount / 2) {
                     extraMoveMap.insert({key + std::to_string(i), moveArray});
+                    moveInverseMap.insert({key + std::to_string(i), key + std::to_string(i) + "'"});
+                } else if (i == amount / 2) {
+                    extraMoveMap.insert({key + std::to_string(i), moveArray});
+                    moveInverseMap.insert({key + std::to_string(i), key + std::to_string(i)});
                 } else {
                     int n = amount - i;
                     if (n > 1) {
                         extraMoveMap.insert({key + std::to_string(i) + "'", moveArray});
+                        moveInverseMap.insert({key + std::to_string(i) + "'", key + std::to_string(i)});
                     } else {
                         extraMoveMap.insert({key + "'", moveArray});
+                        moveInverseMap.insert({key+"'", key});
                     }
                 }
             }
             p.del();
         }
-
         moveMap.insert(extraMoveMap.begin(), extraMoveMap.end());
     }
 
@@ -111,6 +130,53 @@ typedef struct Puzzle {
         delete[](currentPos);
         currentPos = (int*)malloc(size * sizeof(int));
         memcpy(currentPos, solvedState, size * sizeof(int));
+    }
+
+
+    //Note: this method only works for a single move
+    //Use inverseAlg for inversion of an alg
+    string inverseMove(const std::string& move) {
+        return moveInverseMap.find(move)->second;
+    }
+
+    string inverseAlg(const std::string& alg) {
+        vector<string> all = strSplit(alg, " ");
+        std::reverse(all.begin(), all.end());
+        std::string res = "";
+
+        for (int i = 0; i < all.size(); i++) {
+            res += inverseMove(all.at(i)) + " ";
+        }
+        return trim(res);
+    }
+
+    void calcFromSolved(std::string soFar, const std::string& lastMove, int maxDepth) {
+        if (maxDepth != 0) {
+            for (auto const&[key, value] : moveMap) {
+                if (!canCancel(key, lastMove)) {
+                    applyMove(key);
+                    soFar += " " + key;
+
+                    //Add soFar to hashmap
+                    int hash = hashPosition(currentPos);
+
+                    if (fromSolvedTable.count(hash) == 0) {
+                        vector<std::string> vec;
+                        vec.push_back(soFar);
+                        fromSolvedTable.insert({hash, vec});
+                    } else {
+                        auto vec = fromSolvedTable.find(hash)->second;
+                        vec.push_back(soFar);
+                    }
+
+                    calcFromSolved(soFar, key, maxDepth - 1);
+                    applyMove(inverseMove(key));
+                }
+            }
+        }
+        else {
+            return;
+        }
     }
 
     Puzzle(int size, string name, const map<std::string, std::tuple<int, int>> &piecesMap,
@@ -140,9 +206,21 @@ typedef struct Puzzle {
         delete[](solvedState);
         delete[](currentPos);
     }
+
+    //This is a temporary method
+    //TODO: Create a proper method for checking for cancellations
+    static bool canCancel(std::string moveA, std::string moveB) {
+        if (moveA.empty() || moveB.empty()) {
+            return false;
+        }
+        moveA = removeNumbersAndApostrophs(moveA);
+        moveB = removeNumbersAndApostrophs(moveB);
+        return moveA == moveB;
+
+    }
 };
 
-Puzzle newPuzzle(const std::string& def) {
+Puzzle newPuzzle(const std::string& def, int preSearchDepth) {
 
     std::ifstream defFile(def);
 
@@ -288,5 +366,8 @@ Puzzle newPuzzle(const std::string& def) {
         }
     }
     defFile.close();
-    return Puzzle(total, puzzleName, piecesMap, piecesIndexMap, moveMap, solvedState, true);
+
+    Puzzle z = Puzzle(total, puzzleName, piecesMap, piecesIndexMap, moveMap, solvedState, true);
+    z.calcFromSolved("", "", preSearchDepth);
+    return z;
 }
