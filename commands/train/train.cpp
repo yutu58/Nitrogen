@@ -49,7 +49,7 @@ bool train() {
 
     Puzzle p = newPuzzle(defFile, 6);
 
-    std::cout << "Puzzle " << p.name << "loaded!";
+    std::cout << "Puzzle " << p.name << " loaded!" << std::endl << std::endl;
 
 
     //SELECT CASES
@@ -82,6 +82,7 @@ bool train() {
 //    string aufs;
 //    std::cin >> aufs;
 //    vector<string> aufVec = strSplit(aufs, " ");
+    //TODO: Remove hardcoded AUF's
     preAUF = vector<string>{"", "U", "U'", "U2"};
     postAUF = vector<string>{"", "U", "U'", "U2"};
 
