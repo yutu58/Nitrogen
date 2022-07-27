@@ -3,4 +3,4 @@ project(Nitrogen)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(Nitrogen main.cpp util/util.cpp)
+add_executable(Nitrogen main.cpp util/util.cpp puzzles/puzzle.cpp puzzles/solve.cpp)

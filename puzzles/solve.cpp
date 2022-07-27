@@ -1,5 +1,8 @@
 #include <map>
 #include <unordered_map>
+#include <iostream>
+#include "puzzles.h"
+#include "../util/util.h"
 
 void solveHelper(Puzzle& puzzle, const std::string& soFar2, const std::string& lastMove, int depthToGo, std::vector<std::string>& allSolutions) {
     for (auto const& [key, value] : puzzle.moveMap) {
@@ -45,7 +48,7 @@ std::vector<std::string> solveToVec(Puzzle& puzzle, const std::string& setup, in
     int startDepth = puzzle.preSearchDepth + 1;
 
     for (int i = startDepth; i <= maxDepth; i++) {
-        std::cout << "Searching depth: " << i << std::endl;
+//        std::cout << "Searching depth: " << i << std::endl;
         solveHelper(puzzle, "", "", i, res);
     }
     return res;
