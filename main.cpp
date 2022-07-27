@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include "commands/commands.h"
+#include "algRaters/AlgRater2x2.h"
 #include "puzzles/puzzles.h"
 
 using namespace std;
