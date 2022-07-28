@@ -1,9 +1,7 @@
 //This is a C++ version of an old algrater available at yutu58.github.io/algrater
 
-
-#include <string>
 #include <vector>
-#include <unordered_map>
+#include <algorithm>
 #include "AlgRater2x2.h"
 #include "../util/util.h"
 
@@ -122,6 +120,14 @@ int algRater2x2(const string& alg) {
         }
     }
     return lowest;
+}
+
+bool compare(const string& a, const string& b) {
+    return algRater2x2(a) < algRater2x2(b);
+}
+
+void rateAndSort(vector<string>& algs) {
+    sort(algs.begin(), algs.end(), compare);
 }
 
 

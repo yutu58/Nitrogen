@@ -15,7 +15,7 @@ void generateCase(Puzzle& p, vector<string> algs, vector<string> preAUF, vector<
 
     vector<string> scrambles;
     while (scrambles.size() < 20) {
-        scrambles = solveToVec(p, setup, maxDepth);
+        scrambles = solveSetupToVec(p, setup, maxDepth);
         maxDepth++;
     }
 

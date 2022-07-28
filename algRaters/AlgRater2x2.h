@@ -7,4 +7,6 @@
 
 int algRater2x2(const std::string& alg);
 
+void rateAndSort(std::vector<std::string>& algs);
+
 #endif //NITROGEN_ALGRATER2X2_H

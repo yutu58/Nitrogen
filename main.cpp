@@ -1,8 +1,6 @@
 #include <iostream>
 #include <string>
 #include "commands/commands.h"
-#include "algRaters/AlgRater2x2.h"
-#include "puzzles/puzzles.h"
 
 using namespace std;
 
@@ -25,7 +23,12 @@ command_code hashCommand (std::string const& inString) {
 }
 
 int main() {
-    bool running = true;
+    std::ofstream output;
+    output.open(R"(Q:\CubingSoftware\Nitrogen\allAlgs.json)");
+    solveAll2x2States(13, 25, output);
+    output.close();
+
+    bool running = false;
 
     while (running) {
         string fullCommand;

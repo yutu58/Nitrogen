@@ -7,29 +7,33 @@
 #include <string>
 #include "../util/util.h"
 
+void solveAll2x2States(int maxLength, int nTopAlgs, std::ofstream &destFile);
+
 struct Puzzle {
     int size;
     int preSearchDepth;
 
+    int* buff;
+
     std::string name;
 
-    std::map<std::string, std::tuple<int, int>> piecesMap;
-    std::map<std::string, int> piecesIndexMap;
+    std::unordered_map<std::string, std::tuple<int, int>> piecesMap;
+    std::unordered_map<std::string, int> piecesIndexMap;
 
-    std::unordered_map<long, std::vector<std::string>> fromSolvedTable;
+    std::unordered_map<long long, std::vector<std::string>> fromSolvedTable;
 
-    std::map<int, int> orientationMap;
-    std::map<std::string, std::string> moveInverseMap;
+    std::unordered_map<int, int> orientationMap;
+    std::unordered_map<std::string, std::string> moveInverseMap;
 
-    std::map<std::string, int*> moveMap;
+    std::unordered_map<std::string, int*> moveMap;
 
     int* solvedState;
 
     int* currentPos;
 
     //TODO: fix this to some better encoder type so it works 100%
-    [[nodiscard]] long hashPosition() const {
-        int total = 0;
+    [[nodiscard]] long long hashPosition() const {
+        long long total = 0;
         for (int i = 0; i < size; i++) {
             total = total * size + currentPos[i];
         }
@@ -47,7 +51,6 @@ struct Puzzle {
     void applyMove(const std::string& move) {
         int* moveArr = moveMap.find(move)->second;
 
-        int* buff = (int*)malloc(size * sizeof(int));
         memcpy(buff, currentPos, size * sizeof(int));
 
         for (auto const& [key, val] : piecesMap) {
@@ -77,7 +80,7 @@ struct Puzzle {
     }
 
     void generateMovePowers() {
-        std::map<std::string, int*> extraMoveMap;
+        std::unordered_map<std::string, int*> extraMoveMap;
 
         //Check how many times a move can be done to return back to solved
         for (auto const& [key, val] : moveMap) {
@@ -164,7 +167,7 @@ struct Puzzle {
                     std::string soFar = soFar2 + " " + key;
                     soFar = trim(soFar);
 
-                    int hash = hashPosition();
+                    long long hash = hashPosition();
 
                     if (fromSolvedTable.count(hash) == 0) {
                         std::vector<std::string> vec;
@@ -185,11 +188,12 @@ struct Puzzle {
         }
     }
 
-    Puzzle(int size, int preSearchDepth, std::string name, const std::map<std::string, std::tuple<int, int>> &piecesMap,
-           const std::map<std::string, int> &piecesIndexMap, const std::map<std::string, int *> &moveMap, int *solvedState, bool generatePowers)
+    Puzzle(int size, int preSearchDepth, std::string name, const std::unordered_map<std::string, std::tuple<int, int>> &piecesMap,
+           const std::unordered_map<std::string, int> &piecesIndexMap, const std::unordered_map<std::string, int *> &moveMap, int *solvedState, bool generatePowers)
             : size(size), preSearchDepth(preSearchDepth), name(std::move(name)), piecesMap(piecesMap), piecesIndexMap(piecesIndexMap), moveMap(moveMap),
               solvedState(solvedState) {
         currentPos = (int*)malloc(size * sizeof(int));
+        buff = (int*) malloc(size * sizeof(int));
         memcpy(currentPos, solvedState, size * sizeof(int));
 
         for (auto const& [key, val] : piecesMap) {
@@ -229,6 +233,6 @@ Puzzle newPuzzle(const std::string& def, int preSearchDepth);
 
 void solveHelper(Puzzle& puzzle, const std::string& soFar2, const std::string& lastMove, int depthToGo, std::vector<std::string>& allSolutions);
 
-std::vector<std::string> solveToVec(Puzzle& puzzle, const std::string& setup, int maxDepth);
+std::vector<std::string> solveSetupToVec(Puzzle& puzzle, const std::string& setup, int maxDepth);
 
 #endif //NITROGEN_PUZZLES_H

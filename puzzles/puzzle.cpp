@@ -4,7 +4,6 @@
 
 #include <tuple>
 #include <string>
-#include <map>
 #include <unordered_map>
 #include <fstream>
 #include <utility>
@@ -12,16 +11,20 @@
 #include "../util/util.h"
 #include "puzzles.h"
 
+using namespace std;
+
+void solveAll2x2States();
+
 Puzzle newPuzzle(const std::string& def, int preSearchDepth) {
 
     std::ifstream defFile(def);
 
     std::string line;
 
-    std::map<std::string, std::tuple<int, int>> piecesMap;
-    std::map<std::string, int> piecesIndexMap;
+    std::unordered_map<std::string, std::tuple<int, int>> piecesMap;
+    std::unordered_map<std::string, int> piecesIndexMap;
 
-    std::map<std::string, int*> moveMap;
+    std::unordered_map<std::string, int*> moveMap;
 
     int *solvedState = nullptr;
 

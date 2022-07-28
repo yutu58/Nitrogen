@@ -34,3 +34,6 @@ bool generate(const string& input) {
 //
 //}
 
+void bulkGeneratePuzzle() {
+    //
+}
